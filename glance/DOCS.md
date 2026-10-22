@@ -19,10 +19,10 @@ The app runs four things in one container:
 - Home Assistant OS or a Supervised installation, version 2026.7 or later.
 - A 64-bit system: `amd64` (most PCs and NUCs) or `aarch64` (Raspberry Pi 4 or 5, and
   most other ARM boards).
-- An internet connection during installation and updates, to download the editor's source
-  and the Glance image.
+- An internet connection during installation and updates, to download the source code of
+  the editor and Glance and the parts they are built from.
 
-The first installation builds the app on your own device, including the editor itself.
+The first installation builds the app on your own device, including the editor and Glance.
 Expect it to take several minutes, and longer on a Raspberry Pi. Building is the heaviest
 moment in the app's life: if it fails on a device with little memory, stop other apps and try
 again.
@@ -162,10 +162,20 @@ want your dashboard back.
 
 ## Updates
 
-The app's version number is the Glance Editor version it contains. Each editor release pins
-the Glance version it was tested with, so the editor and the dashboard are always updated
-together. Read the [Glance Editor release notes](https://github.com/gcarstoiu/glance-ui/releases)
-before you update. Updating builds the app again on your device, like the first installation.
+The app's version number is the Glance Editor version it contains, with a fourth number for
+updates of the app itself, such as `1.2.0.1`. The editor and the dashboard are always updated
+together:
+
+- Each editor release names the Glance version it was tested with.
+- The app may run a newer Glance **patch** release than that, such as v0.8.7 for an editor
+  tested with v0.8.6, but only after it passed the editor's own test suite. A new minor or
+  major Glance version waits for an editor release that supports it.
+- Updates also bring security fixes for Glance's building blocks, Node.js and the system
+  packages the app runs on.
+
+The [changelog](https://github.com/FaliseDotCom/ha-glance/blob/main/glance/CHANGELOG.md) lists
+what each update contains; read it before you update. Updating builds the app again on your
+device, like the first installation.
 
 ## Remote access
 
@@ -200,6 +210,12 @@ Start with the **Log** tab of the app. Each line starts with the part that wrote
 **The app fails to start right after installation**
 : Check that ports 8080 and 8090 are not used by another app, or pick different ports in the
   **Network** section.
+
+**A Reddit widget with `search` shows no posts**
+: Since Glance v0.8.7, Reddit's API only answers searches from a registered app. Add the
+  widget's `app-auth` setting, as described in
+  [Glance's Reddit widget documentation](https://github.com/glanceapp/glance/blob/main/docs/configuration.md#reddit),
+  in the widget's YAML view. The editor does not warn about this yet.
 
 **The editor says it cannot reach Glance after saving**
 : Look for `[glance]` lines in the log. Glance stops on a configuration it cannot load and is

@@ -2,7 +2,7 @@
 
 [![Add repository to Home Assistant][repository-badge]][repository-url]
 ![Glance Editor 1.2.0][editor-shield]
-![Glance v0.8.6][glance-shield]
+![Glance v0.8.7][glance-shield]
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
 [![License: MIT][license-shield]](LICENSE)
@@ -24,6 +24,9 @@ dashboard in the browser instead of writing YAML by hand.
 - Photos from Home Assistant's media and share folders as backgrounds.
 - Uses the Home Assistant time zone.
 - Runs on `amd64` and `aarch64` (Raspberry Pi 4 and 5).
+- Kept current and patched: Glance patch releases are tested against the editor's own test
+  suite before they ship, Glance is built with the latest Go security fixes, and every
+  release is scanned for known vulnerabilities. See [Security](.docs/security.md).
 
 ## Installation
 
@@ -46,16 +49,18 @@ documentation is shown on the app's **Documentation** tab in Home Assistant.
 ## Contributing
 
 Bug reports and pull requests are welcome. [Development](.docs/development.md) explains how
-the app works and how to test changes, and [Releasing](.docs/releasing.md) covers updating to
-a new Glance Editor version.
+the app works and how to test changes, [Releasing](.docs/releasing.md) covers updates and
+the automation behind them, and [Security](.docs/security.md) how vulnerabilities are found
+and fixed.
 
-The app is YAML, a Dockerfile and a shell script. Pull requests should follow these
+The app is YAML, Dockerfiles and shell scripts. Pull requests should follow these
 conventions:
 
 - **Formatting:** two spaces per indentation level, as in the existing files. `.editorconfig`
   sets the basics for most editors.
-- **Checks:** shell scripts pass [ShellCheck](https://www.shellcheck.net/).
-  [Development](.docs/development.md#1-lint) shows how to run it with Docker.
+- **Checks:** CI must pass: [ShellCheck](https://www.shellcheck.net/), the editor's checks
+  against the app's Glance, the security checks, and the smoke test on both architectures.
+  [Development](.docs/development.md#testing-a-change) shows how to run them with Docker.
 - **User-facing changes:** update [`glance/DOCS.md`](glance/DOCS.md) and add an entry to
   [`glance/CHANGELOG.md`](glance/CHANGELOG.md).
 - **Upstream code:** the editor and Glance are never patched here. A change they need belongs
@@ -72,10 +77,14 @@ repository.
 ## License
 
 The files in this repository are released under the [MIT License](LICENSE), except for
-`glance/icon.png` and `glance/logo.png`. The app downloads and builds, without changes, the
+`glance/icon.png` and `glance/logo.png`. This repository contains no code from either
+upstream project, apart from the short build steps in `glance/Dockerfile` that follow their
+own Dockerfiles. The app downloads and builds the
 [Glance Editor](https://github.com/gcarstoiu/glance-ui) (GPL-3.0) and
-[Glance](https://github.com/glanceapp/glance) (AGPL-3.0); their licences are included in the
-built image under `/usr/share/doc/`. Neither project is affiliated with this one.
+[Glance](https://github.com/glanceapp/glance) (AGPL-3.0) on the user's device, with their
+source unchanged; only Glance's Go dependencies may be raised to their security releases. Their
+licences are included in the built image under `/usr/share/doc/`. Neither project is
+affiliated with this one.
 
 The Glance name and the icon images (`glance/icon.png` and `glance/logo.png`, resized from
 Glance's own app icon) belong to the Glance project. They are used only to identify the app,
@@ -84,7 +93,7 @@ and remain under the Glance project's terms.
 [repository-badge]: https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg
 [repository-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FFaliseDotCom%2Fha-glance
 [editor-shield]: https://img.shields.io/badge/Glance_Editor-1.2.0-blue.svg
-[glance-shield]: https://img.shields.io/badge/Glance-v0.8.6-blue.svg
+[glance-shield]: https://img.shields.io/badge/Glance-v0.8.7-blue.svg
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
 [license-shield]: https://img.shields.io/badge/license-MIT-green.svg

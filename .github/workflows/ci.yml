@@ -1,0 +1,69 @@
+name: CI
+
+# Runs on every pull request and push to main, and when the Update workflow
+# starts it on an update branch (a pull request opened by a workflow does not
+# start other workflows by itself). The weekly run catches vulnerabilities
+# published since the last change; GitHub emails the repository owner when a
+# scheduled run fails.
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: "47 5 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: ShellCheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check the shell scripts
+        run: >-
+          docker run --rm --network none -v "$PWD:/mnt:ro" -w /mnt
+          koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d
+          -x scripts/*.sh scripts/compat/*.sh
+
+  compatibility:
+    name: Glance works with the editor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run the editor's checks against the app's Glance
+        run: scripts/check-glance.sh --summary "$GITHUB_STEP_SUMMARY"
+
+  security:
+    name: No known vulnerabilities with a fix
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: govulncheck, npm audit and Trivy
+        run: scripts/check-security.sh
+
+  image:
+    name: Image on ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build, start, save a dashboard and stop
+        run: scripts/smoke-test.sh

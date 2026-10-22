@@ -1,0 +1,59 @@
+name: Update
+
+# Once a week, looks for a new Glance Editor release and a new Glance patch
+# release, and opens (or refreshes) a pull request with the update. It then
+# starts CI on the update branch, which runs the editor's checks against the
+# new Glance and smoke-tests the image; the results show on the pull request.
+#
+# Needs "Allow GitHub Actions to create and approve pull requests" under
+# Settings > Actions > General > Workflow permissions.
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Look for updates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      BRANCH: update/glance
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Update the pins
+        run: scripts/update-glance.sh --no-build --summary "$RUNNER_TEMP/summary.md"
+      - name: Open or refresh the pull request
+        run: |
+          if [ -z "$(git status --porcelain)" ]
+          then
+            echo "Up to date." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          version=$(sed -n 's/^version: "\(.*\)"$/\1/p' glance/config.yaml)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git commit -am "Update to $version" -m "$(cat "$RUNNER_TEMP/summary.md")"
+          git push --force origin "$BRANCH"
+
+          if [ "$(gh pr view "$BRANCH" --json state --jq .state 2> /dev/null)" = OPEN ]
+          then
+            gh pr edit "$BRANCH" --title "Update to $version" --body-file "$RUNNER_TEMP/summary.md"
+          else
+            gh pr create --base main --head "$BRANCH" --title "Update to $version" --body-file "$RUNNER_TEMP/summary.md"
+          fi
+
+          gh workflow run ci.yml --ref "$BRANCH"
+          cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
