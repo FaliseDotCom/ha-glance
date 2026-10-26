@@ -6,6 +6,10 @@ Glance patch releases and security updates. See the
 [Glance Editor releases](https://github.com/gcarstoiu/glance-ui/releases) and the
 [Glance releases](https://github.com/glanceapp/glance/releases) for changes in those.
 
+## 1.2.0.1
+
+- Glance is built with Go 1.27.3 and the latest security updates of its Go modules.
+
 ## 1.2.0
 
 - First release: the Glance Editor 1.2.0 with Glance v0.8.7. See the

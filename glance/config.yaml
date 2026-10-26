@@ -1,5 +1,5 @@
 name: Glance
-version: "1.2.0"
+version: "1.2.0.1"
 slug: glance
 description: Self-hosted dashboard for your feeds and services, with a no-code editor.
 url: https://github.com/FaliseDotCom/ha-glance/tree/main/glance
