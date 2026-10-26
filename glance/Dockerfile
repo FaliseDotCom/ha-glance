@@ -26,7 +26,7 @@ ARG EDITOR_NODE_IMAGE=node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1d
 ARG GLANCE_VERSION=v0.8.7
 ARG GLANCE_COMMIT=698db7126f8e744263cb7f4ed6301c248f7a3d9c
 ARG GLANCE_GO_UPDATES=golang.org/x/net@v0.60.0
-ARG GO_IMAGE=golang:1.27.3-alpine@sha256:d530cf60723abf1ffae0cd16bb546b379ec0550d2f3815e5b16ed69dbc00fba4
+ARG GO_IMAGE=golang:1.27.3-alpine@sha256:b8c9b82affbbb82a020bbcf998dad2ba9516944ac7e883524642a481a9505e9c
 ARG NODE_IMAGE=node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205
 
 # Glance, built the way its own Dockerfile does, from its unchanged source.
