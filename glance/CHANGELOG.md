@@ -9,6 +9,8 @@ Glance patch releases and security updates. See the
 ## 1.2.0.1
 
 - Glance is built with Go 1.27.3 and the latest security updates of its Go modules.
+- `golang.org/x/net` v0.62.0 instead of v0.60.0: fixes two vulnerabilities in HTML parsing
+  and rendering that the RSS widget reaches when it reads a feed.
 
 ## 1.2.0
 
