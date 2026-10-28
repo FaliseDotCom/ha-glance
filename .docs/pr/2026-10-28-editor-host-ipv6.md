@@ -3,7 +3,7 @@ repo: gcarstoiu/glance-ui
 branch: fix/editor-host
 title: fix(image): pass HOST to the editor so it can listen on IPv6
 patch: 2026-10-28-editor-host-ipv6.patch
-url:
+url: https://github.com/gcarstoiu/glance-ui/pull/41
 ---
 
 ## Summary
