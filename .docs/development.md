@@ -133,6 +133,16 @@ editor owns. Neither works without changing upstream code. The app publishes por
 `webui` instead; `DOCS.md` explains how to add a sidebar entry with a Webpage dashboard.
 Glance sends no `X-Frame-Options` header, so it can be framed.
 
+**The editor listens on IPv4 only, for now.** The Supervisor's Docker network has IPv6, so a
+browser that reaches the editor's port over IPv6, as `homeassistant.local` usually does,
+connects to Docker and then gets an empty reply. It does not fall back to IPv4. Glance listens
+on `:8080`, which includes IPv6, so the dashboard is not affected. The editor would listen on
+both with `HOST=::`, but `start.ts` passes only an allowlist of variables to the editor, and
+`HOST` is not on it. The fix is offered upstream in
+[`.docs/pr/2026-10-28-editor-host-ipv6.md`](pr/2026-10-28-editor-host-ipv6.md). Once an
+editor release passes `HOST`, add `HOST=::` to the Home Assistant `ENV` line in the
+Dockerfile, and remove the workaround from `DOCS.md`, the README and this note.
+
 **No Docker socket.** `docker_api: true` would let Glance's Docker containers widget work, but
 it requires users to turn off protection mode and gives the app the lowest security rating.
 The gate in `start.ts` finds no socket and stays idle.
