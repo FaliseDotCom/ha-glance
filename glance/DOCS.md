@@ -207,6 +207,15 @@ Start with the **Log** tab of the app. Each line starts with the part that wrote
 **The dashboard does not open, and the log says `waiting for /config/config/glance.yml`**
 : There is no dashboard yet. Open the editor and save one; see [First start](#first-start).
 
+**The editor does not load at `http://homeassistant.local:8090`, or the browser says the page
+sent no data**
+: Your browser reached the editor over IPv6, which it does not answer yet; the dashboard is not
+  affected. Open the editor by your Home Assistant's IP address instead, for example
+  `http://192.168.1.10:8090`. You find the address under **Settings** > **System** >
+  **Network**. **Open web UI** has the same problem when you opened Home Assistant through
+  `homeassistant.local`; open Home Assistant by its IP address too, or type the editor's
+  address yourself.
+
 **The app fails to start right after installation**
 : Check that ports 8080 and 8090 are not used by another app, or pick different ports in the
   **Network** section.

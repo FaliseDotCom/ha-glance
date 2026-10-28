@@ -1,0 +1,46 @@
+From e6179a28d953f934ab767638ded78a5dff5d8765 Mon Sep 17 00:00:00 2001
+From: Sander Falise <sanderfalise@gmail.com>
+Date: Wed, 28 Oct 2026 08:38:26 +0100
+Subject: [PATCH] fix(image): pass HOST to the editor so it can listen on IPv6
+
+The start program passes only an allowlist of variables to the editor, and
+HOST was not on it, so the editor always listened on 0.0.0.0. On a Docker
+network with IPv6, a connection to the editor's published port over IPv6 is
+accepted by Docker and then gets an empty reply, and browsers don't fall back
+to IPv4. HOST=:: now makes the editor listen on IPv4 and IPv6; without HOST
+nothing changes.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ README.md      | 1 +
+ image/start.ts | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 0824f36..4be0363 100644
+--- a/README.md
++++ b/README.md
+@@ -126,6 +126,7 @@ Open `http://<server>:8090/` for the editor; the dashboard is on `http://<server
+ | `/var/run/docker.sock` (read only, optional) | For the Docker containers widget, and so the editor can list containers. The editor itself never gets the socket: it asks a gate that only lets it list |
+ | `/photos` (read only, optional) | A folder of photos for backgrounds |
+ | `PUID`, `PGID` | The user and group the editor runs as and writes files as (Unraid: `99` and `100`) |
++| `HOST` (optional) | The address the editor listens on: `0.0.0.0`, IPv4 only, unless set. Set `::` when the container's network has IPv6, or browsers that connect over IPv6 get an empty reply |
+ | Your own variables | Anything your `${VARIABLES}` need. They go to Glance, not to the editor. A `.env` next to `glance.yml` works too |
+ 
+ ### First run
+diff --git a/image/start.ts b/image/start.ts
+index 52ca7a2..1bf920e 100644
+--- a/image/start.ts
++++ b/image/start.ts
+@@ -35,7 +35,7 @@ const paths = {
+ 
+ // Settings the editor gets. Nothing else from the container's environment reaches it: variables you add for your
+ // ${VAR}s are for Glance, which substitutes them (the editor stores placeholders literally and never needs them).
+-const PASS_TO_EDITOR = ["PATH", "TZ", "NODE_ENV", "GLANCE_VERSION", "BODY_SIZE_LIMIT", "ORIGIN",
++const PASS_TO_EDITOR = ["PATH", "TZ", "NODE_ENV", "GLANCE_VERSION", "BODY_SIZE_LIMIT", "HOST", "ORIGIN",
+   "PROTOCOL_HEADER", "HOST_HEADER", "PORT_HEADER", "ADDRESS_HEADER", "XFF_DEPTH"];
+ 
+ function log(msg: string): void {
+-- 
+2.56.0.windows.4
+

@@ -40,6 +40,13 @@ Select the button above, or add the repository by hand:
 Then follow the [app documentation](glance/DOCS.md) to build your first dashboard. The same
 documentation is shown on the app's **Documentation** tab in Home Assistant.
 
+> [!NOTE]
+> The editor does not answer over IPv6 yet. When `http://homeassistant.local:8090` stays empty,
+> open the editor by your Home Assistant's IP address instead, such as
+> `http://192.168.1.10:8090`. The dashboard is not affected. A fix is
+> [offered to the editor](.docs/pr/2026-10-28-editor-host-ipv6.md); see
+> [Troubleshooting](glance/DOCS.md#troubleshooting).
+
 ## Apps in this repository
 
 | App                 | Description                                                         |
