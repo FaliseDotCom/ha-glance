@@ -1,7 +1,7 @@
 # Glance for Home Assistant
 
 [![Add repository to Home Assistant][repository-badge]][repository-url]
-![Glance Editor 1.2.0][editor-shield]
+![Glance Editor 1.5.0][editor-shield]
 ![Glance v0.8.7][glance-shield]
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
@@ -99,7 +99,7 @@ and remain under the Glance project's terms.
 
 [repository-badge]: https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg
 [repository-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FFaliseDotCom%2Fha-glance
-[editor-shield]: https://img.shields.io/badge/Glance_Editor-1.2.0-blue.svg
+[editor-shield]: https://img.shields.io/badge/Glance_Editor-1.5.0-blue.svg
 [glance-shield]: https://img.shields.io/badge/Glance-v0.8.7-blue.svg
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
