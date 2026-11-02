@@ -17,8 +17,8 @@
 #
 # scripts/update-glance.sh updates all of them and the `version` in
 # config.yaml together (see .docs/releasing.md).
-ARG EDITOR_VERSION=1.2.0
-ARG EDITOR_COMMIT=0b3fdc1ba5585fe72b1e51e128848756d7a1a733
+ARG EDITOR_VERSION=1.5.0
+ARG EDITOR_COMMIT=0fcd7233a665ffa69c8b85f6827224f6286e97c7
 ARG EDITOR_GLANCE_VERSION=v0.8.6
 ARG EDITOR_GLANCE_COMMIT=fbd9c1b6ae0c50ec015843f1bea48c400cddb518
 ARG EDITOR_GLANCE_IMAGE=glanceapp/glance:v0.8.6@sha256:9dfb09470b207dcb67ac715994bdb1929374ba3f9c0d7df7462c24adf10fd073
@@ -26,8 +26,8 @@ ARG EDITOR_NODE_IMAGE=node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1d
 ARG GLANCE_VERSION=v0.8.7
 ARG GLANCE_COMMIT=698db7126f8e744263cb7f4ed6301c248f7a3d9c
 ARG GLANCE_GO_UPDATES=golang.org/x/net@v0.62.0
-ARG GO_IMAGE=golang:1.27.3-alpine@sha256:b8c9b82affbbb82a020bbcf998dad2ba9516944ac7e883524642a481a9505e9c
-ARG NODE_IMAGE=node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205
+ARG GO_IMAGE=golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac56571b0507f3deb
+ARG NODE_IMAGE=node:24-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c
 
 # Glance, built the way its own Dockerfile does, from its unchanged source.
 # GLANCE_GO_UPDATES raises Go modules Glance depends on to their security
