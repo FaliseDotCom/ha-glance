@@ -17,8 +17,8 @@
 #
 # scripts/update-glance.sh updates all of them and the `version` in
 # config.yaml together (see .docs/releasing.md).
-ARG EDITOR_VERSION=1.5.0
-ARG EDITOR_COMMIT=0fcd7233a665ffa69c8b85f6827224f6286e97c7
+ARG EDITOR_VERSION=1.5.1
+ARG EDITOR_COMMIT=0b32089a3fd4d19665c287123bf6948077d7b5b8
 ARG EDITOR_GLANCE_VERSION=v0.8.6
 ARG EDITOR_GLANCE_COMMIT=fbd9c1b6ae0c50ec015843f1bea48c400cddb518
 ARG EDITOR_GLANCE_IMAGE=glanceapp/glance:v0.8.6@sha256:9dfb09470b207dcb67ac715994bdb1929374ba3f9c0d7df7462c24adf10fd073
@@ -84,11 +84,12 @@ COPY --from=build /src/third_party/glance/LICENSE /src/third_party/glance/README
 COPY --from=build /src/LICENSE /usr/share/doc/glance-editor/LICENSE
 WORKDIR /app
 COPY --from=build /src/apps/editor/build build
-COPY --from=build /src/image/start.ts /src/image/docker-gate.ts /src/image/dotenv.ts image/
+COPY --from=build /src/image/start.ts /src/image/docker-gate.ts /src/image/dotenv.ts /src/image/listen.ts image/
 # Only root reaches /run, and no setuid program can make the editor's user root.
 RUN echo '{"type":"module"}' > package.json \
   && chmod 0700 /run && find / -xdev -perm -4000 -type f -exec chmod u-s {} +
-ENV NODE_ENV=production PORT=3000 GLANCE_BIN=/usr/local/bin/glance GLANCE_VERSION=${GLANCE_VERSION} \
+# No PORT or HOST: start.ts sets them for the editor, and a user's own go to Glance.
+ENV NODE_ENV=production GLANCE_BIN=/usr/local/bin/glance GLANCE_VERSION=${GLANCE_VERSION} \
     GLANCE_CONFIG=/glance-config/glance.yml EDITOR_DATA_DIR=/data BODY_SIZE_LIMIT=100M
 # start.ts starts as root, and runs the editor as PUID:PGID.
 ENV PUID=99 PGID=100
