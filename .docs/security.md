@@ -41,9 +41,9 @@ Fix it by updating, never by patching upstream code:
 1. **Run the Update workflow first** (or `scripts/update-glance.sh`). A newer Node image, Go
    release or Glance patch release often already contains the fix.
 2. **A Go module of Glance** (govulncheck names it, with the fixed version): add
-   `module@version` to `GLANCE_GO_UPDATES` in `glance/Dockerfile`, separated by spaces, and
-   run `scripts/check-glance.sh` to make sure Glance still works with it. The update script
-   drops the entry once a Glance release requires that version itself.
+   `module@version` to `GLANCE_GO_UPDATES` in `glance/Dockerfile`, separated by spaces and
+   in double quotes, and run `scripts/check-glance.sh` to make sure Glance still works with
+   it. The update script drops the entry once a Glance release requires that version itself.
 3. **The Go standard library:** the update script picks the newest Go patch release; if the
    fix is only in a newer Go minor version, raise `GO_IMAGE` by hand and run the checks.
 4. **A Debian package:** fixed by the next Node image, or by `apt-get upgrade` once Debian

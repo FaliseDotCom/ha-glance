@@ -15,10 +15,11 @@ fatal()
   exit 1
 }
 
-# Prints the value of one top-level ARG in the app's Dockerfile.
+# Prints the value of one top-level ARG in the app's Dockerfile, without the
+# double quotes a value with spaces needs there.
 dockerfile_arg()
 {
-  sed -n "s|^ARG $1=\(.*\)$|\1|p" "$DOCKERFILE"
+  sed -n "s|^ARG $1=\(.*\)$|\1|p" "$DOCKERFILE" | tr -d '"'
 }
 
 # Prints the commit a tag of a GitHub repository points to. An annotated tag

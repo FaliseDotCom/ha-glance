@@ -169,7 +169,7 @@ choose_go()
   do
     module="${update%@*}"
     wanted="${update#*@}"
-    required=$(awk -v module="$module" '$1 == module || ($1 == "require" && $2 == module) { print $NF; exit }' <<< "$go_mod")
+    required=$(awk -v module="$module" '$1 == module { print $2; exit } $1 == "require" && $2 == module { print $3; exit }' <<< "$go_mod")
     if [ -n "$required" ] && ! version_gt "$wanted" "$required"
     then
       echo "Dropping $update: Glance $GLANCE_VERSION requires $module $required."
@@ -209,9 +209,18 @@ next_app_version()
   echo "${current%.*}.$(( ${current##*.} + 1 ))"
 }
 
+# Writes one ARG to the Dockerfile. Docker reads a value with spaces as several
+# ARGs unless it is in double quotes.
 set_arg()
 {
-  sed -i "s|^ARG $1=.*\$|ARG $1=$2|" "$DOCKERFILE"
+  local value="$2"
+
+  if [[ "$value" == *" "* ]]
+  then
+    value="\"$value\""
+  fi
+
+  sed -i "s|^ARG $1=.*\$|ARG $1=$value|" "$DOCKERFILE"
 }
 
 update_files()

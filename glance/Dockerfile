@@ -25,9 +25,9 @@ ARG EDITOR_GLANCE_IMAGE=glanceapp/glance:v0.8.6@sha256:9dfb09470b207dcb67ac71599
 ARG EDITOR_NODE_IMAGE=node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
 ARG GLANCE_VERSION=v0.8.7
 ARG GLANCE_COMMIT=698db7126f8e744263cb7f4ed6301c248f7a3d9c
-ARG GLANCE_GO_UPDATES=golang.org/x/net@v0.62.0
-ARG GO_IMAGE=golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac56571b0507f3deb
-ARG NODE_IMAGE=node:24-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c
+ARG GLANCE_GO_UPDATES="golang.org/x/net@v0.62.0 github.com/andybalholm/brotli@v1.2.7 github.com/klauspost/compress@v1.20.2"
+ARG GO_IMAGE=golang:1.27.3-alpine@sha256:fa3d596898d9f126af7c01d14ee7597bab3f39cccf392ef36b69fe77cd681f18
+ARG NODE_IMAGE=node:24-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
 
 # Glance, built the way its own Dockerfile does, from its unchanged source.
 # GLANCE_GO_UPDATES raises Go modules Glance depends on to their security
