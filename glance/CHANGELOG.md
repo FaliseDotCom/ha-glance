@@ -6,6 +6,12 @@ Glance patch releases and security updates. See the
 [Glance Editor releases](https://github.com/gcarstoiu/glance-ui/releases) and the
 [Glance releases](https://github.com/glanceapp/glance/releases) for changes in those.
 
+## 1.5.1
+
+- Glance Editor 1.5.1. See the [Glance Editor 1.5.1 release notes](https://github.com/gcarstoiu/glance-ui/releases/tag/v1.5.1).
+- The editor answers over IPv6, so `http://homeassistant.local:8090` and **Open web UI** work
+  without using the IP address.
+
 ## 1.5.0
 
 - Glance Editor 1.5.0. See the [Glance Editor 1.5.0 release notes](https://github.com/gcarstoiu/glance-ui/releases/tag/v1.5.0).

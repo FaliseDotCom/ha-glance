@@ -1,7 +1,7 @@
 # Glance for Home Assistant
 
 [![Add repository to Home Assistant][repository-badge]][repository-url]
-![Glance Editor 1.5.0][editor-shield]
+![Glance Editor 1.5.1][editor-shield]
 ![Glance v0.8.7][glance-shield]
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
@@ -39,13 +39,6 @@ Select the button above, or add the repository by hand:
 
 Then follow the [app documentation](glance/DOCS.md) to build your first dashboard. The same
 documentation is shown on the app's **Documentation** tab in Home Assistant.
-
-> [!NOTE]
-> The editor does not answer over IPv6 yet. When `http://homeassistant.local:8090` stays empty,
-> open the editor by your Home Assistant's IP address instead, such as
-> `http://192.168.1.10:8090`. The dashboard is not affected. A fix is
-> [offered to the editor](.docs/pr/2026-10-28-editor-host-ipv6.md); see
-> [Troubleshooting](glance/DOCS.md#troubleshooting).
 
 ## Apps in this repository
 
@@ -99,7 +92,7 @@ and remain under the Glance project's terms.
 
 [repository-badge]: https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg
 [repository-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FFaliseDotCom%2Fha-glance
-[editor-shield]: https://img.shields.io/badge/Glance_Editor-1.5.0-blue.svg
+[editor-shield]: https://img.shields.io/badge/Glance_Editor-1.5.1-blue.svg
 [glance-shield]: https://img.shields.io/badge/Glance-v0.8.7-blue.svg
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
