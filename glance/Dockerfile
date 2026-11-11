@@ -26,7 +26,7 @@ ARG EDITOR_NODE_IMAGE=node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1d
 ARG GLANCE_VERSION=v0.8.8
 ARG GLANCE_COMMIT=53aec7f392ca72143870dcb45526ec7c80a68f32
 ARG GLANCE_GO_UPDATES="github.com/andybalholm/brotli@v1.2.7 github.com/klauspost/compress@v1.20.2"
-ARG GO_IMAGE=golang:1.27.3-alpine@sha256:fa3d596898d9f126af7c01d14ee7597bab3f39cccf392ef36b69fe77cd681f18
+ARG GO_IMAGE=golang:1.27.4-alpine@sha256:0a5f7fe796599ff487605987432e7619ae45beeb2fba4c2ce0b907879932aebf
 ARG NODE_IMAGE=node:24-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
 
 # Glance, built the way its own Dockerfile does, from its unchanged source.
