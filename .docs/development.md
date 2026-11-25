@@ -8,6 +8,7 @@ How the Glance app is put together, and how to test a change before it reaches u
 repository.yaml              App repository definition, read by the Supervisor
 glance/
   config.yaml                App definition: version, ports and folder mappings
+  apparmor.txt               AppArmor profile the Supervisor runs the app under
   Dockerfile                 Builds the Glance Editor from source, with Glance alongside
   DOCS.md                    User documentation, shown on the Documentation tab
   README.md                  Short description, shown in the app store
@@ -104,6 +105,7 @@ stops all children and exits within eight seconds, inside the Supervisor's defau
 | `webui` on port 3000                      | **Open web UI** opens the editor, which is where a fresh install starts. |
 | No `watchdog` URL                         | The editor's port may be cleared to close it. The Docker health check (`/healthz` on `127.0.0.1:3000`) runs inside the container, so the Supervisor's watchdog keeps working without a published port. |
 | No options                                | Everything about the dashboard, including `${VARIABLE}` values in `.env`, is set in the editor. |
+| `apparmor.txt`                            | The Supervisor runs the app under this profile instead of Docker's default one, which raises the security rating from 5 to 6. See [Security](security.md#apparmor). |
 
 ### Storage
 
@@ -218,6 +220,12 @@ scripts/smoke-test.sh
 Builds the image, starts it with `--init` as the Supervisor does, starts an empty dashboard
 through the editor's API, saves it, waits for Glance to serve it and for the health check to
 pass, and checks that the app stops cleanly. CI runs it on `amd64` and `arm64` runners.
+
+Where the Docker host has AppArmor, as on the CI runners, the test loads `glance/apparmor.txt`
+(through `sudo` when not run as root), runs the app under it, checks that the app cannot
+start a shell, and fails on anything the kernel logged as refused by the profile. Docker
+Desktop's kernel has AppArmor switched off, so on Windows the test skips this and CI is where
+the profile is tested.
 
 ### 5. Build and run by hand
 

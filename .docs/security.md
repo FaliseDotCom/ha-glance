@@ -55,6 +55,31 @@ Fix it by updating, never by patching upstream code:
 
 Report vulnerabilities in Glance itself to the [Glance project](https://github.com/glanceapp/glance/security).
 
+## AppArmor
+
+The Supervisor runs the app under its own AppArmor profile, `glance/apparmor.txt`, instead
+of Docker's default one. It renames the profile to the app's slug when it loads it. The
+profile allows only what the app needs:
+
+- **Programs:** docker-init, Node and Glance. The app cannot start a shell or any other
+  program. That is why the Dockerfile clears the Node image's entry point, a shell script
+  that only hands the command on to Node. `docker exec` can still start a program, because
+  Docker applies the profile as it starts it, but that program is confined in turn.
+- **Files:** read access to the image, `/proc` and `/sys` (Glance's server stats widget);
+  write access to `/config` and `/tmp` only; `/media` and `/share` read only.
+- **Rights:** the capabilities `start.ts` uses to give `/config` to the editor's user, run the
+  editor as that user and stop it, and Glance's read access to the editor's files. No raw
+  sockets, mounts or tracing of other processes.
+
+A custom profile is worth one point in Home Assistant's security rating: the app scores 6,
+where the default is 5. Ingress (two points) is not possible, see
+[Development](development.md#design-decisions).
+
+The smoke test runs the app under the profile wherever the Docker host has AppArmor, and fails
+on anything the profile refused; see [Development](development.md#4-smoke-test). When a new
+editor or Glance release needs something the profile does not allow, the smoke test in CI shows
+the refused access in its log. Widen the profile for exactly that access, with a comment why.
+
 ## By design
 
 These are known and documented for users in `glance/DOCS.md`:

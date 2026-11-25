@@ -3,6 +3,11 @@
 # the path every user takes: the editor answers, a dashboard started empty is
 # saved, Glance serves it, the health check passes and the app stops cleanly.
 #
+# When the Docker host has AppArmor (Linux, as in CI), the app runs under its
+# own profile, glance/apparmor.txt, as the Supervisor runs it, and the test
+# fails on anything the profile refused. Loading the profile needs root, so
+# the script uses sudo when it is not run as root.
+#
 # Usage: scripts/smoke-test.sh [image]
 #   image  An image to test instead of building glance/.
 
@@ -18,11 +23,65 @@ readonly EDITOR_URL="http://127.0.0.1:$EDITOR_PORT"
 readonly DASHBOARD_URL="http://127.0.0.1:$DASHBOARD_PORT"
 readonly WAIT_SECONDS=60
 readonly STOP_SECONDS=10
+readonly APPARMOR_FILE="$REPO_ROOT/glance/apparmor.txt"
+readonly APPARMOR_PROFILE="glance-smoke-$$"
+
+apparmor=false
+# The refusals the test caused on purpose.
+apparmor_expected=0
 
 # shellcheck disable=SC2329 # Invoked through the trap set in main.
 cleanup()
 {
   docker rm -f "$CONTAINER" > /dev/null 2>&1 || true
+
+  if [ "$apparmor" = true ]
+  then
+    as_root apparmor_parser -R "$(apparmor_profile_file)" > /dev/null 2>&1 || true
+  fi
+}
+
+# Runs a command as root, through sudo unless the script already runs as root.
+as_root()
+{
+  if [ "$(id -u)" -eq 0 ]
+  then
+    "$@"
+    return
+  fi
+
+  sudo -n "$@"
+}
+
+# Succeeds when the Docker host can confine containers with AppArmor, and this
+# script can load a profile there.
+apparmor_available()
+{
+  docker info --format '{{json .SecurityOptions}}' | grep -q 'name=apparmor' \
+    && command -v apparmor_parser > /dev/null
+}
+
+# Prints the path of the app's profile, renamed for this test the way the
+# Supervisor renames it to the app's slug.
+apparmor_profile_file()
+{
+  echo "${TMPDIR:-/tmp}/$APPARMOR_PROFILE.apparmor"
+}
+
+load_apparmor()
+{
+  if ! apparmor_available
+  then
+    echo "skip AppArmor: the Docker host does not support it; CI tests the profile"
+    return
+  fi
+
+  local file
+  file=$(apparmor_profile_file)
+  sed "s/^profile [^ ]*/profile $APPARMOR_PROFILE/" "$APPARMOR_FILE" > "$file"
+  as_root apparmor_parser -r -W "$file" || fatal "The AppArmor profile does not load."
+  apparmor=true
+  echo "ok   AppArmor profile loaded"
 }
 
 fail()
@@ -70,14 +129,73 @@ check_glance_version()
 {
   local expected header
   expected=$(dockerfile_arg GLANCE_VERSION)
-  # Through sh -c, so Git Bash on Windows does not rewrite the container path.
-  header=$(docker exec "$CONTAINER" sh -c 'head -n 1 /config/config/glance.yml')
+  # Through Node, the only program the AppArmor profile lets run, and with the
+  # path inside the script, so Git Bash on Windows does not rewrite it.
+  header=$(docker exec "$CONTAINER" node -e \
+    'process.stdout.write(require("fs").readFileSync("/config/config/glance.yml", "utf8").split("\n")[0])')
 
   if [[ "$header" != *"for Glance $expected."* ]]
   then
     fail "glance.yml was written for another Glance than $expected: $header"
   fi
   echo "ok   glance.yml written for Glance $expected"
+}
+
+# Prints what the kernel logged as refused by the test's profile so far.
+apparmor_denials()
+{
+  as_root dmesg | grep 'apparmor="DENIED"' | grep -F "profile=\"$APPARMOR_PROFILE\"" || true
+}
+
+# Fails with the refusals given, when there are any.
+fail_on_denials()
+{
+  if [ -n "$1" ]
+  then
+    echo "$1" >&2
+    fail "The AppArmor profile refused the access above $2."
+  fi
+}
+
+# Checks that the profile confines the app without getting in its way: it is
+# applied, it refused nothing on the path above, including refusals the path
+# did not notice, and a process in it cannot start a program the profile does
+# not list. That last check is refused on purpose, so it comes after the first.
+# Docker applies the profile as it starts a docker exec command, so that
+# command itself always runs; the check is what it can start in turn.
+check_apparmor()
+{
+  if [ "$apparmor" = false ]
+  then
+    return
+  fi
+
+  local applied
+  applied=$(docker inspect --format '{{.AppArmorProfile}}' "$CONTAINER")
+  [ "$applied" = "$APPARMOR_PROFILE" ] || fail "The app runs under AppArmor profile '$applied' instead of $APPARMOR_PROFILE."
+  echo "ok   AppArmor profile applied"
+
+  fail_on_denials "$(apparmor_denials)" "while the app ran"
+  echo "ok   AppArmor refused nothing while the app ran"
+
+  if docker exec "$CONTAINER" node -e 'require("child_process").execFileSync("sh", [ "-c", "true" ])' > /dev/null 2>&1
+  then
+    fail "The AppArmor profile let the app start a shell."
+  fi
+  apparmor_expected=$(apparmor_denials | wc -l)
+  echo "ok   the app cannot start a shell"
+}
+
+# Fails when the profile refused anything while the app stopped.
+check_apparmor_stop()
+{
+  if [ "$apparmor" = false ]
+  then
+    return
+  fi
+
+  fail_on_denials "$(apparmor_denials | tail -n +$(( apparmor_expected + 1 )))" "while the app stopped"
+  echo "ok   AppArmor refused nothing while the app stopped"
 }
 
 check_stop()
@@ -110,7 +228,15 @@ main()
   fi
 
   trap cleanup EXIT
-  docker run -d --init --name "$CONTAINER" -e TZ=Europe/Amsterdam \
+  load_apparmor
+
+  local security=()
+  if [ "$apparmor" = true ]
+  then
+    security=( --security-opt "apparmor=$APPARMOR_PROFILE" )
+  fi
+
+  docker run -d --init --name "$CONTAINER" -e TZ=Europe/Amsterdam "${security[@]}" \
     -p "127.0.0.1:$DASHBOARD_PORT:8080" -p "127.0.0.1:$EDITOR_PORT:3000" "$image" > /dev/null
 
   wait_for "editor answers" curl -fsS "$EDITOR_URL/healthz"
@@ -124,7 +250,9 @@ main()
   wait_for "Glance serves the dashboard" sh -c "curl -fsS '$DASHBOARD_URL/' | grep -q 'Smoke test'"
   check_glance_version
   wait_for "health check passes" healthy
+  check_apparmor
   check_stop
+  check_apparmor_stop
   echo "== smoke test passed"
 }
 

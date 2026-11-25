@@ -106,4 +106,8 @@ EXPOSE 8080 3000
 # keeps working when the editor's port is not published.
 HEALTHCHECK --start-period=60s --interval=30s --timeout=3s \
   CMD [ "node", "-e", "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))" ]
+# The Node image's entry point, docker-entrypoint.sh, only hands a command such
+# as this one on to node, through a shell. The app's AppArmor profile lets no
+# shell run, so the container starts Node directly.
+ENTRYPOINT []
 CMD [ "node", "/app/image/start.ts" ]
