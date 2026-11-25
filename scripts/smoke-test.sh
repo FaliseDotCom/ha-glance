@@ -70,11 +70,15 @@ apparmor_profile_file()
 
 load_apparmor()
 {
-  if ! apparmor_available
+  if ! apparmor_supported
   then
     echo "skip AppArmor: the Docker host does not support it; CI tests the profile"
     return
   fi
+
+  # A host with AppArmor must test the profile, so a missing loader is an
+  # error rather than a reason to run the app unconfined.
+  command -v apparmor_parser > /dev/null     || fatal "The Docker host supports AppArmor, but apparmor_parser is not installed to load the profile."
 
   local file
   file=$(apparmor_profile_file)
@@ -141,10 +145,29 @@ check_glance_version()
   echo "ok   glance.yml written for Glance $expected"
 }
 
-# Prints what the kernel logged as refused by the test's profile so far.
+# Prints what the kernel logged as refused by the test's profile so far, or
+# nothing when it refused nothing. Fails when the kernel log cannot be read,
+# so a check never passes without having seen the log.
 apparmor_denials()
 {
-  as_root dmesg | grep 'apparmor="DENIED"' | grep -F "profile=\"$APPARMOR_PROFILE\"" || true
+  local log
+  log=$(as_root dmesg) || fatal "The kernel log cannot be read to check what AppArmor refused."
+
+  # grep exits 1 when nothing matches, which is the good outcome here; any
+  # other failure is an error.
+  grep 'apparmor="DENIED"' <<< "$log" | grep -F "profile=\"$APPARMOR_PROFILE\"" || [ "$?" -eq 1 ]
+}
+
+# Prints the number of lines in $1, 0 when it is empty.
+line_count()
+{
+  if [ -z "$1" ]
+  then
+    echo 0
+    return
+  fi
+
+  wc -l <<< "$1"
 }
 
 # Fails with the refusals given, when there are any.
@@ -175,14 +198,17 @@ check_apparmor()
   [ "$applied" = "$APPARMOR_PROFILE" ] || fail "The app runs under AppArmor profile '$applied' instead of $APPARMOR_PROFILE."
   echo "ok   AppArmor profile applied"
 
-  fail_on_denials "$(apparmor_denials)" "while the app ran"
+  local denials
+  denials=$(apparmor_denials) || fail "AppArmor's refusals could not be read."
+  fail_on_denials "$denials" "while the app ran"
   echo "ok   AppArmor refused nothing while the app ran"
 
   if docker exec "$CONTAINER" node -e 'require("child_process").execFileSync("sh", [ "-c", "true" ])' > /dev/null 2>&1
   then
     fail "The AppArmor profile let the app start a shell."
   fi
-  apparmor_expected=$(apparmor_denials | wc -l)
+  denials=$(apparmor_denials) || fail "AppArmor's refusals could not be read."
+  apparmor_expected=$(line_count "$denials")
   echo "ok   the app cannot start a shell"
 }
 
@@ -194,7 +220,9 @@ check_apparmor_stop()
     return
   fi
 
-  fail_on_denials "$(apparmor_denials | tail -n +$(( apparmor_expected + 1 )))" "while the app stopped"
+  local denials
+  denials=$(apparmor_denials) || fail "AppArmor's refusals could not be read."
+  fail_on_denials "$(tail -n +$(( apparmor_expected + 1 )) <<< "$denials")" "while the app stopped"
   echo "ok   AppArmor refused nothing while the app stopped"
 }
 
