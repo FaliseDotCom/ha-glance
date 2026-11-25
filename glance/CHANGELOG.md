@@ -6,6 +6,11 @@ Glance patch releases and security updates. See the
 [Glance Editor releases](https://github.com/gcarstoiu/glance-ui/releases) and the
 [Glance releases](https://github.com/glanceapp/glance/releases) for changes in those.
 
+## 2.0.0.2
+
+- The app runs under its own AppArmor profile, which limits it to the programs, files and
+  rights it needs. Home Assistant raises its security rating from 5 to 6.
+
 ## 2.0.0.1
 
 - Glance is built with Go 1.27.4 and the latest security updates of its Go modules.

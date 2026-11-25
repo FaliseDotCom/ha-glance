@@ -27,6 +27,8 @@ dashboard in the browser instead of writing YAML by hand.
 - Kept current and patched: Glance patch releases are tested against the editor's own test
   suite before they ship, Glance is built with the latest Go security fixes, and every
   release is scanned for known vulnerabilities. See [Security](.docs/security.md).
+- Runs under its own AppArmor profile, which limits it to the programs, files and rights it
+  needs.
 
 ## Installation
 

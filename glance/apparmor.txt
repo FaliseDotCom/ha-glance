@@ -1,0 +1,79 @@
+# AppArmor profile for the Glance app. See .docs/security.md#apparmor.
+#
+# The Supervisor loads this file and renames the profile to the app's full
+# slug, so the name below only matters when testing outside Home Assistant;
+# scripts/smoke-test.sh renames it the same way. Its rules follow from what
+# runs in the container:
+#
+#   docker-init
+#     node /app/image/start.ts       root
+#       node /app/build              the editor, as PUID:PGID
+#         glance                     validating a save, in /tmp
+#       glance (dashboard, preview)  root
+#   node -e fetch(...)               Docker's health check
+#
+# Nothing else may run: no shell, no package manager, no other program.
+
+#include <tunables/global>
+
+profile glance flags=(attach_disconnected,mediate_deleted)
+{
+  #include <abstractions/base>
+
+  # start.ts gives the configuration folder to PUID:PGID, runs the editor as
+  # that user and stops it again; Glance, as root, reads what the editor wrote.
+  capability chown,
+  capability dac_override,
+  capability dac_read_search,
+  capability fowner,
+  capability kill,
+  capability setgid,
+  capability setuid,
+
+  # Web pages, feeds and monitors (Glance), the two web UIs, DNS, and the
+  # pipes to child processes.
+  network inet stream,
+  network inet6 stream,
+  network inet dgram,
+  network inet6 dgram,
+  network netlink raw,
+  network unix,
+
+  # start.ts and docker-init stop their children; Docker stops the app.
+  signal (send, receive) peer=@{profile_name},
+  signal (receive) peer=unconfined,
+  signal (receive) peer=runc,
+  signal (receive) peer=crun,
+  signal (receive) peer=dockerd,
+  ptrace (read) peer=@{profile_name},
+
+  # The only programs that may run.
+  /{usr/,}sbin/docker-init ix,
+  /usr/local/bin/node ix,
+  /usr/local/bin/glance ix,
+
+  # The image, read only. Glance's server stats widget reads /proc and /sys.
+  / r,
+  /app/ r,
+  /app/** r,
+  /etc/ r,
+  /etc/** r,
+  /usr/ r,
+  /usr/** r,
+  @{PROC}/** r,
+  /sys/** r,
+
+  # The dashboard, the editor's data and its temporary files.
+  /config/ rw,
+  /config/** rwk,
+  /tmp/ rw,
+  /tmp/** rwk,
+  /data/ r,
+  /data/** r,
+
+  # Background photos: read only, as mapped in config.yaml.
+  /media/ r,
+  /media/** r,
+  /share/ r,
+  /share/** r,
+}
