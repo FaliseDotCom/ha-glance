@@ -139,8 +139,10 @@ check_glance_version()
   echo "ok   glance.yml written for Glance $expected"
 }
 
-# Checks that the profile confines the app: it is applied, and a program it
-# does not list cannot run.
+# Checks that the profile confines the app: it is applied, and a process in it
+# cannot start a program the profile does not list. Docker applies the profile
+# as it starts a docker exec command, so that command itself always runs; the
+# check is what it can start in turn.
 check_apparmor_applied()
 {
   if [ "$apparmor" = false ]
@@ -152,9 +154,9 @@ check_apparmor_applied()
   applied=$(docker inspect --format '{{.AppArmorProfile}}' "$CONTAINER")
   [ "$applied" = "$APPARMOR_PROFILE" ] || fail "The app runs under AppArmor profile '$applied' instead of $APPARMOR_PROFILE."
 
-  if docker exec "$CONTAINER" sh -c true > /dev/null 2>&1
+  if docker exec "$CONTAINER" node -e 'require("child_process").execFileSync("sh", [ "-c", "true" ])' > /dev/null 2>&1
   then
-    fail "The AppArmor profile let a shell run."
+    fail "The AppArmor profile let the app start a shell."
   fi
   echo "ok   AppArmor profile applied"
 }

@@ -12,7 +12,7 @@
 #       glance (dashboard, preview)  root
 #   node -e fetch(...)               Docker's health check
 #
-# Nothing else may run: no shell, no package manager, no other program.
+# The app can start nothing else: no shell, no package manager, no other program.
 
 #include <tunables/global>
 

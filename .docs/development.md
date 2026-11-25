@@ -222,10 +222,10 @@ through the editor's API, saves it, waits for Glance to serve it and for the hea
 pass, and checks that the app stops cleanly. CI runs it on `amd64` and `arm64` runners.
 
 Where the Docker host has AppArmor, as on the CI runners, the test loads `glance/apparmor.txt`
-(through `sudo` when not run as root), runs the app under it, checks that a shell cannot run,
-and fails on anything the kernel logged as refused by the profile. Docker Desktop's kernel has
-AppArmor switched off, so on Windows the test skips this and CI is where the profile is
-tested.
+(through `sudo` when not run as root), runs the app under it, checks that the app cannot
+start a shell, and fails on anything the kernel logged as refused by the profile. Docker
+Desktop's kernel has AppArmor switched off, so on Windows the test skips this and CI is where
+the profile is tested.
 
 ### 5. Build and run by hand
 
