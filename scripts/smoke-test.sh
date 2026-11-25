@@ -53,12 +53,10 @@ as_root()
   sudo -n "$@"
 }
 
-# Succeeds when the Docker host can confine containers with AppArmor, and this
-# script can load a profile there.
-apparmor_available()
+# Succeeds when the Docker host can confine containers with AppArmor.
+apparmor_supported()
 {
-  docker info --format '{{json .SecurityOptions}}' | grep -q 'name=apparmor' \
-    && command -v apparmor_parser > /dev/null
+  docker info --format '{{json .SecurityOptions}}' | grep -q 'name=apparmor'
 }
 
 # Prints the path of the app's profile, renamed for this test the way the
@@ -72,13 +70,16 @@ load_apparmor()
 {
   if ! apparmor_supported
   then
+    # CI is where the profile is tested, so there a skip is an error.
+    [ "${CI:-}" != true ] || fatal "The CI host does not support AppArmor, so the profile cannot be tested."
     echo "skip AppArmor: the Docker host does not support it; CI tests the profile"
     return
   fi
 
   # A host with AppArmor must test the profile, so a missing loader is an
   # error rather than a reason to run the app unconfined.
-  command -v apparmor_parser > /dev/null     || fatal "The Docker host supports AppArmor, but apparmor_parser is not installed to load the profile."
+  command -v apparmor_parser > /dev/null \
+    || fatal "The Docker host supports AppArmor, but apparmor_parser is not installed to load the profile."
 
   local file
   file=$(apparmor_profile_file)
