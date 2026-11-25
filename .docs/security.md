@@ -62,7 +62,8 @@ of Docker's default one. It renames the profile to the app's slug when it loads 
 profile allows only what the app needs:
 
 - **Programs:** docker-init, Node and Glance. No shell or other program can run, also not
-  through `docker exec`.
+  through `docker exec`. That is why the Dockerfile clears the Node image's entry point,
+  a shell script that only hands the command on to Node.
 - **Files:** read access to the image, `/proc` and `/sys` (Glance's server stats widget);
   write access to `/config` and `/tmp` only; `/media` and `/share` read only.
 - **Rights:** the capabilities `start.ts` uses to give `/config` to the editor's user, run the
