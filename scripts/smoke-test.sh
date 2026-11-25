@@ -27,6 +27,8 @@ readonly APPARMOR_FILE="$REPO_ROOT/glance/apparmor.txt"
 readonly APPARMOR_PROFILE="glance-smoke-$$"
 
 apparmor=false
+# The refusals the test caused on purpose.
+apparmor_expected=0
 
 # shellcheck disable=SC2329 # Invoked through the trap set in main.
 cleanup()
@@ -139,11 +141,29 @@ check_glance_version()
   echo "ok   glance.yml written for Glance $expected"
 }
 
-# Checks that the profile confines the app: it is applied, and a process in it
-# cannot start a program the profile does not list. Docker applies the profile
-# as it starts a docker exec command, so that command itself always runs; the
-# check is what it can start in turn.
-check_apparmor_applied()
+# Prints what the kernel logged as refused by the test's profile so far.
+apparmor_denials()
+{
+  as_root dmesg | grep 'apparmor="DENIED"' | grep -F "profile=\"$APPARMOR_PROFILE\"" || true
+}
+
+# Fails with the refusals given, when there are any.
+fail_on_denials()
+{
+  if [ -n "$1" ]
+  then
+    echo "$1" >&2
+    fail "The AppArmor profile refused the access above $2."
+  fi
+}
+
+# Checks that the profile confines the app without getting in its way: it is
+# applied, it refused nothing on the path above, including refusals the path
+# did not notice, and a process in it cannot start a program the profile does
+# not list. That last check is refused on purpose, so it comes after the first.
+# Docker applies the profile as it starts a docker exec command, so that
+# command itself always runs; the check is what it can start in turn.
+check_apparmor()
 {
   if [ "$apparmor" = false ]
   then
@@ -153,31 +173,29 @@ check_apparmor_applied()
   local applied
   applied=$(docker inspect --format '{{.AppArmorProfile}}' "$CONTAINER")
   [ "$applied" = "$APPARMOR_PROFILE" ] || fail "The app runs under AppArmor profile '$applied' instead of $APPARMOR_PROFILE."
+  echo "ok   AppArmor profile applied"
+
+  fail_on_denials "$(apparmor_denials)" "while the app ran"
+  echo "ok   AppArmor refused nothing while the app ran"
 
   if docker exec "$CONTAINER" node -e 'require("child_process").execFileSync("sh", [ "-c", "true" ])' > /dev/null 2>&1
   then
     fail "The AppArmor profile let the app start a shell."
   fi
-  echo "ok   AppArmor profile applied"
+  apparmor_expected=$(apparmor_denials | wc -l)
+  echo "ok   the app cannot start a shell"
 }
 
-# Fails when the kernel logged anything the profile refused during the test,
-# including refusals the path above did not notice.
-check_apparmor_denials()
+# Fails when the profile refused anything while the app stopped.
+check_apparmor_stop()
 {
   if [ "$apparmor" = false ]
   then
     return
   fi
 
-  local denials
-  denials=$(as_root dmesg | grep 'apparmor="DENIED"' | grep -F "profile=\"$APPARMOR_PROFILE\"" || true)
-  if [ -n "$denials" ]
-  then
-    echo "$denials" >&2
-    fail "The AppArmor profile refused the access above."
-  fi
-  echo "ok   AppArmor refused nothing"
+  fail_on_denials "$(apparmor_denials | tail -n +$(( apparmor_expected + 1 )))" "while the app stopped"
+  echo "ok   AppArmor refused nothing while the app stopped"
 }
 
 check_stop()
@@ -232,9 +250,9 @@ main()
   wait_for "Glance serves the dashboard" sh -c "curl -fsS '$DASHBOARD_URL/' | grep -q 'Smoke test'"
   check_glance_version
   wait_for "health check passes" healthy
-  check_apparmor_applied
+  check_apparmor
   check_stop
-  check_apparmor_denials
+  check_apparmor_stop
   echo "== smoke test passed"
 }
 
